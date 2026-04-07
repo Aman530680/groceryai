@@ -23,30 +23,39 @@ import MealPlannerPage from './pages/MealPlannerPage';
 import NutritionPage from './pages/NutritionPage';
 import ProfilePage from './pages/ProfilePage';
 import DeliveryDashboard from './pages/DeliveryDashboard';
+import DeliveryLogin from './pages/DeliveryLogin';
 
 import AdminLayout from './components/admin/AdminLayout';
+import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminProducts from './components/admin/AdminProducts';
 import AdminOrders from './components/admin/AdminOrders';
 import AdminUsers from './components/admin/AdminUsers';
 import AdminRecipes from './components/admin/AdminRecipes';
 
+// Protect regular user routes
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <PageLoader />;
   return user ? children : <Navigate to="/login" replace />;
 }
 
+// Admin portal — show AdminLogin if not logged in as admin
 function AdminRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <PageLoader />;
-  return user?.role === 'admin' ? children : <Navigate to="/" replace />;
+  if (!user) return <AdminLogin />;
+  if (user.role !== 'admin') return <AdminLogin />;
+  return children;
 }
 
+// Delivery portal — show DeliveryLogin if not logged in as delivery
 function DeliveryRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <PageLoader />;
-  return user?.role === 'delivery' ? children : <Navigate to="/" replace />;
+  if (!user) return <DeliveryLogin />;
+  if (!['delivery', 'admin'].includes(user.role)) return <DeliveryLogin />;
+  return children;
 }
 
 function AppLayout() {
@@ -85,7 +94,8 @@ export default function App() {
           <CartProvider>
             <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
             <Routes>
-              {/* Admin */}
+              {/* Admin Portal — /admin/login shows AdminLogin, /admin/* requires admin role */}
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/*" element={<AdminRoute><AdminLayout /></AdminRoute>}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="products" element={<AdminProducts />} />
@@ -94,10 +104,11 @@ export default function App() {
                 <Route path="recipes" element={<AdminRecipes />} />
               </Route>
 
-              {/* Delivery */}
+              {/* Delivery Portal — /delivery/login shows DeliveryLogin */}
+              <Route path="/delivery/login" element={<DeliveryLogin />} />
               <Route path="/delivery" element={<DeliveryRoute><DeliveryDashboard /></DeliveryRoute>} />
 
-              {/* Main app */}
+              {/* Main user app */}
               <Route path="/*" element={<AppLayout />} />
             </Routes>
           </CartProvider>
