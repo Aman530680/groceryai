@@ -2,7 +2,7 @@ const OpenAI = require('openai');
 const Recipe = require('../models/Recipe');
 const Product = require('../models/Product');
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const getOpenAI = () => new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ── Rule-based fallback (works without OpenAI) ──
 const fallbackResponse = async (message) => {
@@ -83,7 +83,7 @@ Rules:
 - When user asks to add items to cart, end response with: {"action": "ADD_TO_CART", "items": ["item1"]}
 - Suggest visiting /recipes or /products pages when relevant`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'system', content: systemPrompt }, ...messages.slice(-10)],
       temperature: 0.8,
@@ -133,7 +133,7 @@ exports.generateRecipesFromIngredients = async (ingredients) => {
 Return ONLY valid JSON array (no markdown):
 [{"title":"","description":"","ingredients":[{"name":"","quantity":"","unit":""}],"steps":[""],"cookTime":30,"prepTime":15,"servings":2,"difficulty":"easy","cuisine":"","tags":[""],"nutrition":{"calories":0,"protein":0,"carbs":0,"fat":0,"fiber":0},"missingIngredients":[""]}]`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
@@ -168,7 +168,7 @@ exports.analyzeIngredientImage = async (base64Image) => {
   if (!hasKey) return ['tomato', 'onion', 'garlic', 'potato'];
 
   try {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4-vision-preview',
       messages: [{
         role: 'user',
