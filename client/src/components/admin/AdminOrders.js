@@ -3,24 +3,28 @@ import api from '../../services/api';
 import Spinner from '../ui/Spinner';
 import toast from 'react-hot-toast';
 
-const STATUS_OPTIONS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+// Admin can only set these — processing/shipped/delivered are delivery agent's job
+const ADMIN_STATUS_OPTIONS = ['pending', 'confirmed', 'cancelled'];
+
 const STATUS_STYLE = {
-  pending: 'bg-yellow-100 text-yellow-700',
-  confirmed: 'bg-blue-100 text-blue-700',
+  pending:    'bg-yellow-100 text-yellow-700',
+  confirmed:  'bg-blue-100 text-blue-700',
   processing: 'bg-purple-100 text-purple-700',
-  shipped: 'bg-cyan-100 text-cyan-700',
-  delivered: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
+  shipped:    'bg-cyan-100 text-cyan-700',
+  delivered:  'bg-green-100 text-green-700',
+  cancelled:  'bg-red-100 text-red-700',
 };
 
+const ALL_STATUS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+
 export default function AdminOrders() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [orders, setOrders]           = useState([]);
+  const [loading, setLoading]         = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
-  const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState(null);
-  const [agents, setAgents] = useState([]);
-  const [assignId, setAssignId] = useState('');
+  const [search, setSearch]           = useState('');
+  const [selected, setSelected]       = useState(null);
+  const [agents, setAgents]           = useState([]);
+  const [assignId, setAssignId]       = useState('');
 
   useEffect(() => { fetchOrders(); fetchAgents(); }, [statusFilter]);
 
@@ -55,7 +59,7 @@ export default function AdminOrders() {
     if (!assignId) { toast.error('Select a delivery agent'); return; }
     try {
       await api.put(`/admin/orders/${orderId}/assign`, { deliveryUserId: assignId });
-      toast.success('Delivery agent assigned & order shipped!');
+      toast.success('✅ Delivery agent assigned! Order is now with delivery team.');
       setAssignId('');
       fetchOrders();
       setSelected(null);
@@ -74,6 +78,9 @@ export default function AdminOrders() {
           <h1 className="text-xl font-bold text-gray-800 dark:text-white">Orders</h1>
           <p className="text-sm text-gray-500">{orders.length} total orders</p>
         </div>
+        <div className="text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-3 py-2 rounded-xl border border-blue-200 dark:border-blue-700">
+          ℹ️ Processing → Shipped → Delivered is managed by Delivery Team
+        </div>
       </div>
 
       {/* Filters */}
@@ -86,14 +93,14 @@ export default function AdminOrders() {
         />
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input w-auto">
           <option value="">All Status</option>
-          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+          {ALL_STATUS.map((s) => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
         </select>
         <button onClick={fetchOrders} className="btn-primary px-4">Search</button>
       </div>
 
-      {/* Status count pills */}
+      {/* Status count pills — show all for visibility */}
       <div className="flex flex-wrap gap-2">
-        {STATUS_OPTIONS.map((s) => {
+        {ALL_STATUS.map((s) => {
           const count = orders.filter((o) => o.status === s).length;
           return (
             <button key={s} onClick={() => setStatusFilter(statusFilter === s ? '' : s)}
@@ -110,46 +117,52 @@ export default function AdminOrders() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700/50">
                 <tr>
-                  {['Order ID', 'Customer', 'Items', 'Total', 'Payment', 'Status', 'Date', 'Actions'].map((h) => (
-                    <th key={h} className="text-left px-5 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">{h}</th>
+                  {['Order ID', 'Customer', 'Items', 'Total', 'Payment', 'Status', 'Assigned To', 'Date', 'Actions'].map((h) => (
+                    <th key={h} className="text-left px-4 py-3.5 font-semibold text-gray-500 text-xs uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={8} className="text-center py-12 text-gray-400">No orders found</td></tr>
+                  <tr><td colSpan={9} className="text-center py-12 text-gray-400">No orders found</td></tr>
                 ) : filtered.map((order) => (
                   <tr key={order._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                    <td className="px-5 py-4 font-mono text-xs text-gray-500">#{order._id.slice(-8).toUpperCase()}</td>
-                    <td className="px-5 py-4">
-                      <div>
-                        <p className="font-medium">{order.user?.name}</p>
-                        <p className="text-xs text-gray-400">{order.user?.email}</p>
-                      </div>
+                    <td className="px-4 py-4 font-mono text-xs text-gray-500">#{order._id.slice(-8).toUpperCase()}</td>
+                    <td className="px-4 py-4">
+                      <p className="font-medium">{order.user?.name}</p>
+                      <p className="text-xs text-gray-400">{order.user?.email}</p>
                     </td>
-                    <td className="px-5 py-4 text-gray-500">{order.items.length} items</td>
-                    <td className="px-5 py-4 font-bold text-primary-600">${order.totalPrice.toFixed(2)}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-4 text-gray-500">{order.items.length} items</td>
+                    <td className="px-4 py-4 font-bold text-primary-600">${order.totalPrice.toFixed(2)}</td>
+                    <td className="px-4 py-4">
                       <span className={`badge ${order.isPaid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                         {order.isPaid ? '✓ Paid' : order.paymentMethod === 'cod' ? 'COD' : 'Pending'}
                       </span>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-4">
                       <span className={`badge capitalize ${STATUS_STYLE[order.status]}`}>{order.status}</span>
                     </td>
-                    <td className="px-5 py-4 text-gray-400 text-xs">{new Date(order.createdAt).toLocaleDateString()}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-4 text-xs text-gray-500">
+                      {order.assignedTo?.name
+                        ? <span className="bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 px-2 py-1 rounded-lg">🚚 {order.assignedTo.name}</span>
+                        : <span className="text-gray-400">—</span>}
+                    </td>
+                    <td className="px-4 py-4 text-gray-400 text-xs">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
                         <button onClick={() => setSelected(order)} className="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 font-medium">
                           View
                         </button>
-                        <select
-                          value={order.status}
-                          onChange={(e) => updateStatus(order._id, e.target.value)}
-                          className="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 cursor-pointer"
-                        >
-                          {STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
+                        {/* Admin can only set pending / confirmed / cancelled */}
+                        {ADMIN_STATUS_OPTIONS.includes(order.status) && (
+                          <select
+                            value={order.status}
+                            onChange={(e) => updateStatus(order._id, e.target.value)}
+                            className="text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 cursor-pointer"
+                          >
+                            {ADMIN_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -171,8 +184,17 @@ export default function AdminOrders() {
               </div>
               <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-2xl">✕</button>
             </div>
+
             <div className="p-6 space-y-5">
-              {/* Customer */}
+              {/* Current Status */}
+              <div className={`rounded-xl p-3 text-center font-semibold text-sm ${STATUS_STYLE[selected.status]}`}>
+                Current Status: <span className="capitalize">{selected.status}</span>
+                {['processing', 'shipped', 'delivered'].includes(selected.status) && (
+                  <p className="text-xs font-normal mt-0.5 opacity-80">Managed by delivery team</p>
+                )}
+              </div>
+
+              {/* Customer + Address */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
                   <p className="text-xs text-gray-400 mb-2 font-semibold uppercase">Customer</p>
@@ -206,7 +228,7 @@ export default function AdminOrders() {
                 </div>
               </div>
 
-              {/* Status History */}
+              {/* Status Timeline */}
               <div>
                 <p className="text-xs text-gray-400 mb-2 font-semibold uppercase">Status Timeline</p>
                 <div className="space-y-2">
@@ -216,6 +238,7 @@ export default function AdminOrders() {
                       <div>
                         <span className={`badge capitalize text-xs ${STATUS_STYLE[h.status]}`}>{h.status}</span>
                         <span className="text-xs text-gray-400 ml-2">{new Date(h.updatedAt).toLocaleString()}</span>
+                        {h.updatedBy && <span className="text-xs text-gray-400 ml-1">by {h.updatedBy}</span>}
                         {h.note && <p className="text-xs text-gray-500 mt-0.5">{h.note}</p>}
                       </div>
                     </div>
@@ -223,10 +246,27 @@ export default function AdminOrders() {
                 </div>
               </div>
 
-              {/* Assign Delivery */}
-              {!['delivered', 'cancelled'].includes(selected.status) && agents.length > 0 && (
+              {/* Admin Actions — only pending/confirmed/cancelled */}
+              {ADMIN_STATUS_OPTIONS.includes(selected.status) && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-xl p-4">
+                  <p className="text-sm font-semibold mb-3 text-yellow-800 dark:text-yellow-300">⚙️ Admin Actions</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {ADMIN_STATUS_OPTIONS.filter((s) => s !== selected.status).map((s) => (
+                      <button key={s}
+                        onClick={() => { updateStatus(selected._id, s); setSelected((p) => ({ ...p, status: s })); }}
+                        className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${STATUS_STYLE[s]}`}>
+                        Mark as {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Assign Delivery Agent — only for confirmed orders */}
+              {selected.status === 'confirmed' && agents.length > 0 && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
-                  <p className="text-sm font-semibold mb-3">🚚 Assign Delivery Agent</p>
+                  <p className="text-sm font-semibold mb-1 text-blue-800 dark:text-blue-300">🚚 Assign to Delivery Agent</p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mb-3">Once assigned, delivery team handles processing → shipped → delivered</p>
                   <div className="flex gap-3">
                     <select value={assignId} onChange={(e) => setAssignId(e.target.value)} className="input flex-1">
                       <option value="">Select agent...</option>
@@ -237,15 +277,17 @@ export default function AdminOrders() {
                 </div>
               )}
 
-              {/* Quick status update */}
-              <div className="flex gap-3 flex-wrap">
-                {STATUS_OPTIONS.filter((s) => s !== selected.status).map((s) => (
-                  <button key={s} onClick={() => { updateStatus(selected._id, s); setSelected((p) => ({ ...p, status: s })); }}
-                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${STATUS_STYLE[s]}`}>
-                    Mark as {s}
-                  </button>
-                ))}
-              </div>
+              {/* Read-only notice for delivery-managed statuses */}
+              {['processing', 'shipped'].includes(selected.status) && (
+                <div className="bg-cyan-50 dark:bg-cyan-900/20 rounded-xl p-4 text-center">
+                  <p className="text-sm text-cyan-700 dark:text-cyan-300 font-medium">
+                    🚚 This order is with the delivery team
+                  </p>
+                  <p className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">
+                    Assigned to: <strong>{selected.assignedTo?.name || '—'}</strong>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

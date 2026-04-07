@@ -95,6 +95,9 @@ exports.getAllOrders = async (req, res) => {
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, note } = req.body;
+    const adminAllowed = ['pending', 'confirmed', 'cancelled'];
+    if (!adminAllowed.includes(status))
+      return res.status(400).json({ message: 'Admin can only set pending, confirmed or cancelled. Processing/Shipped/Delivered are managed by delivery team.' });
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
