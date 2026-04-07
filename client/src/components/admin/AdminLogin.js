@@ -27,20 +27,6 @@ export default function AdminLogin() {
     }
   };
 
-  const quickLogin = async () => {
-    setLoading(true);
-    try {
-      const user = await login('aman123@groceryai.com', 'aman123');
-      if (user.role !== 'admin') { toast.error('Access denied.'); return; }
-      toast.success(`Welcome, ${user.name}!`);
-      navigate('/admin');
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 w-full max-w-md border border-purple-100 dark:border-gray-700">
@@ -51,31 +37,6 @@ export default function AdminLogin() {
           </div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Admin Portal</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">Restricted access — Admins only</p>
-        </div>
-
-        {/* Quick Login */}
-        <button
-          type="button"
-          onClick={quickLogin}
-          disabled={loading}
-          className="w-full flex items-center justify-between bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 border border-purple-200 dark:border-purple-700 text-purple-800 dark:text-purple-300 px-4 py-3 rounded-xl transition-all duration-200 hover:scale-[1.02] mb-6"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-xl">🔑</span>
-            <div className="text-left">
-              <p className="text-sm font-bold">Quick Admin Login</p>
-              <p className="text-xs opacity-70">aman123@groceryai.com</p>
-            </div>
-          </div>
-          <span className="text-xs font-semibold bg-purple-200 dark:bg-purple-800 px-3 py-1 rounded-lg">
-            {loading ? '...' : 'Login →'}
-          </span>
-        </button>
-
-        <div className="flex items-center gap-3 mb-5">
-          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
-          <span className="text-xs text-gray-400">or enter credentials</span>
-          <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

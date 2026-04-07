@@ -4,6 +4,27 @@ A production-grade full-stack web application that lets users enter ingredients,
 
 ---
 
+## 🌐 Live Demo
+
+| Portal | URL |
+|--------|-----|
+| User Store | https://groceryai-rho.vercel.app |
+| Admin Panel | https://groceryai-rho.vercel.app/admin |
+| Delivery Dashboard | https://groceryai-rho.vercel.app/delivery |
+| Backend API | https://groceryai-iehq.onrender.com |
+
+---
+
+## 🔐 Demo Credentials
+
+| Role | Email | Password |
+|------|-------|----------|
+| Admin | `aman123@groceryai.com` | `aman123` |
+| Delivery | `delivery123@groceryai.com` | `delivery123` |
+| User | Register at `/register` | — |
+
+---
+
 ## 🚀 Tech Stack
 
 | Layer | Technology |
@@ -176,17 +197,15 @@ API runs at: http://localhost:5000
 
 ## 🚀 Deployment
 
-### Frontend (Vercel)
-```bash
-cd client
-npm run build
-# Deploy build/ folder to Vercel
-```
+### Frontend — Vercel
+- Live: https://groceryai-rho.vercel.app
+- Root Directory: `client`, Build: `npm run build`, Output: `build`
+- Env var: `REACT_APP_API_URL=https://groceryai-iehq.onrender.com/api`
 
-### Backend (Render / Railway)
-- Set all environment variables in the dashboard
-- Deploy the `server/` folder
-- Set start command: `node index.js`
+### Backend — Render
+- Live: https://groceryai-iehq.onrender.com
+- Root Directory: `server`, Start: `node index.js`
+- Set all env vars from `server/.env.example` in Render dashboard
 
 ---
 
