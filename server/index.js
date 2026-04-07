@@ -19,12 +19,12 @@ const app = express();
 // ── CORS ──
 const allowedOrigins = [
   'http://localhost:3000',
+  'https://groceryai-rho.vercel.app',
   process.env.CLIENT_URL,
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error(`CORS blocked: ${origin}`));
