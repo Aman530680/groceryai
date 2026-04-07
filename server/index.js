@@ -3,47 +3,74 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
-const authRoutes = require('./routes/auth');
-const productRoutes = require('./routes/products');
-const recipeRoutes = require('./routes/recipes');
-const cartRoutes = require('./routes/cart');
-const orderRoutes = require('./routes/orders');
-const chatRoutes = require('./routes/chat');
+const authRoutes     = require('./routes/auth');
+const productRoutes  = require('./routes/products');
+const recipeRoutes   = require('./routes/recipes');
+const cartRoutes     = require('./routes/cart');
+const orderRoutes    = require('./routes/orders');
+const chatRoutes     = require('./routes/chat');
 const mealPlanRoutes = require('./routes/mealPlans');
-const adminRoutes = require('./routes/admin');
-const uploadRoutes = require('./routes/upload');
+const adminRoutes    = require('./routes/admin');
+const uploadRoutes   = require('./routes/upload');
 const deliveryRoutes = require('./routes/delivery');
 
 const app = express();
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:3000', credentials: true }));
-app.use(express.json());
+// ── CORS ──
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error(`CORS blocked: ${origin}`));
+  },
+  credentials: true,
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
 
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/recipes', recipeRoutes);
-app.use('/api/cart', cartRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/chat', chatRoutes);
+// ── Routes ──
+app.use('/api/auth',       authRoutes);
+app.use('/api/products',   productRoutes);
+app.use('/api/recipes',    recipeRoutes);
+app.use('/api/cart',       cartRoutes);
+app.use('/api/orders',     orderRoutes);
+app.use('/api/chat',       chatRoutes);
 app.use('/api/meal-plans', mealPlanRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/delivery', deliveryRoutes);
+app.use('/api/admin',      adminRoutes);
+app.use('/api/upload',     uploadRoutes);
+app.use('/api/delivery',   deliveryRoutes);
 
-app.get('/api/health', (req, res) => res.json({ status: 'OK', time: new Date() }));
+// ── Health check — Render pings this to keep server alive ──
+app.get('/',          (req, res) => res.json({ message: 'GroceryAI Backend is running 🚀' }));
+app.get('/api/health',(req, res) => res.json({ status: 'OK', time: new Date(), env: process.env.NODE_ENV }));
 
+// ── Global error handler ──
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('❌ Error:', err.message);
   res.status(err.status || 500).json({ message: err.message || 'Internal Server Error' });
 });
 
+// ── 404 handler ──
+app.use((req, res) => {
+  res.status(404).json({ message: `Route ${req.originalUrl} not found` });
+});
+
+// ── Connect DB then start server ──
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
-    console.log('✅ MongoDB connected to:', process.env.MONGO_URI);
-    app.listen(process.env.PORT || 5000, () =>
-      console.log(`🚀 Server running on port ${process.env.PORT || 5000}`)
+    console.log('✅ MongoDB connected');
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, '0.0.0.0', () =>
+      console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`)
     );
   })
   .catch((err) => {

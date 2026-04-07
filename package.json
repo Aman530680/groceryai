@@ -6,5 +6,24 @@
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm start",
     "start:server": "cd server && npm start"
+  },
+  "description": "A production-grade full-stack web application that lets users enter ingredients, get AI-generated recipes, auto-add missing items to cart, and interact with an AI cooking chatbot.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Aman530680/groceryai.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Aman530680/groceryai/issues"
+  },
+  "homepage": "https://github.com/Aman530680/groceryai#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "mongoose": "^9.4.1"
   }
 }
