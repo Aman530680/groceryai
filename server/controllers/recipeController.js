@@ -180,6 +180,7 @@ exports.seedRecipes = async (req, res) => {
   }
 };
 
+exports.deleteRecipe = async (req, res) => {
   try {
     await Recipe.findByIdAndDelete(req.params.id);
     res.json({ message: 'Recipe deleted' });
