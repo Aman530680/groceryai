@@ -75,8 +75,6 @@ exports.deleteProduct = async (req, res) => {
 
 exports.seedProducts = async (req, res) => {
   try {
-    const count = await Product.countDocuments();
-    if (count > 0) return res.status(400).json({ message: 'Products already seeded' });
     const products = [
       { name: 'Tomato', description: 'Fresh red tomatoes perfect for curries and salads.', price: 1.20, originalPrice: 1.50, category: 'vegetables', unit: 'kg', stock: 80, image: 'https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=400', tags: ['vegetable', 'fresh', 'healthy'], isActive: true },
       { name: 'Potato', description: 'Farm fresh potatoes for daily cooking.', price: 0.99, originalPrice: 1.20, category: 'vegetables', unit: 'kg', stock: 120, image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400', tags: ['vegetable', 'staple'], isActive: true },
@@ -103,6 +101,7 @@ exports.seedProducts = async (req, res) => {
       { name: 'Honey', description: 'Natural organic honey.', price: 5.99, originalPrice: 6.99, category: 'other', unit: 'bottle', stock: 25, image: 'https://images.unsplash.com/photo-1587049352851-8d4e89133924?w=400', tags: ['organic', 'sweet'], isActive: true },
       { name: 'Peanut Butter', description: 'Creamy peanut butter spread.', price: 4.20, originalPrice: 5.00, category: 'other', unit: 'jar', stock: 40, image: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?w=400', tags: ['spread', 'protein'], isActive: true },
     ];
+    await Product.deleteMany({});
     await Product.insertMany(products);
     res.json({ message: `${products.length} products seeded successfully` });
   } catch (err) {
