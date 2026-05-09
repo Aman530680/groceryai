@@ -16,7 +16,21 @@ export default function AdminProducts() {
   const [catFilter, setCatFilter] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [seeding, setSeeding] = useState(false);
+
   useEffect(() => { fetchProducts(); }, []);
+
+  const loadSampleProducts = async () => {
+    if (!window.confirm('Load 24 sample products? This only works if no products exist yet.')) return;
+    setSeeding(true);
+    try {
+      const { data } = await api.post('/products/seed');
+      toast.success(data.message);
+      fetchProducts();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Seed failed');
+    } finally { setSeeding(false); }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -87,9 +101,14 @@ export default function AdminProducts() {
           <h1 className="text-xl font-bold text-gray-800 dark:text-white">Products</h1>
           <p className="text-sm text-gray-500">{products.length} total products</p>
         </div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <span className="text-lg">+</span> Add New Product
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={loadSampleProducts} disabled={seeding} className="btn-secondary flex items-center gap-2">
+            📦 {seeding ? 'Loading...' : 'Load Sample Products'}
+          </button>
+          <button onClick={openAdd} className="btn-primary flex items-center gap-2">
+            <span className="text-lg">+</span> Add New Product
+          </button>
+        </div>
       </div>
 
       {/* Add/Edit Form */}
