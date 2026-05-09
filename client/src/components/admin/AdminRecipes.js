@@ -26,6 +26,19 @@ export default function AdminRecipes() {
   const [submitting, setSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState('');
   const [search, setSearch] = useState('');
+  const [seeding, setSeeding] = useState(false);
+
+  const loadSamples = async () => {
+    if (!window.confirm('Add 5 sample recipes to the database?')) return;
+    setSeeding(true);
+    try {
+      const { data } = await api.post('/recipes/seed');
+      toast.success(data.message);
+      fetchRecipes();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to seed recipes');
+    } finally { setSeeding(false); }
+  };
 
   useEffect(() => { fetchRecipes(); }, []);
 
@@ -148,9 +161,14 @@ export default function AdminRecipes() {
           <h1 className="text-xl font-bold text-gray-800 dark:text-white">Recipes</h1>
           <p className="text-sm text-gray-500">{recipes.length} total recipes</p>
         </div>
-        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
-          <span className="text-lg">+</span> Add New Recipe
-        </button>
+        <div className="flex gap-2">
+          <button onClick={loadSamples} disabled={seeding} className="btn-secondary flex items-center gap-2">
+            {seeding ? '⏳ Loading...' : '📦 Load Sample Recipes'}
+          </button>
+          <button onClick={openAdd} className="btn-primary flex items-center gap-2">
+            <span className="text-lg">+</span> Add New Recipe
+          </button>
+        </div>
       </div>
 
       {/* Search */}
